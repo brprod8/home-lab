@@ -1,7 +1,7 @@
 # DON - Device Operations Network
 
 <p align="center">
-  <img src="pics/dashboard.png" width="900">
+  <img src="pics/ovierview.png" width="900">
 </p>
 
 <p align="center">
