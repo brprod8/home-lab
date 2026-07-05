@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DON Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #050816;
+            color: #f8fafc;
+            font-family: Arial, sans-serif;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #070b1f, #030611);
+            border-right: 1px solid #1e293b;
+            padding: 24px 18px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 900;
+            color: #8b5cf6;
+            margin-bottom: 4px;
+        }
+
+        .sublogo {
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .nav-item, .quick-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            color: #e2e8f0;
+            background: transparent;
+            border: 1px solid transparent;
+            font-size: 15px;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #7c3aed, #4c1d95);
+            color: white;
+        }
+
+        .nav-item:hover, .quick-btn:hover {
+            border-color: #334155;
+            background: #0f172a;
+        }
+
+        .divider {
+            height: 1px;
+            background: #1e293b;
+            margin: 26px 0;
+        }
+
+        .quick-title {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .quick-btn {
+            border: 1px solid #1e293b;
+            cursor: pointer;
+        }
+
+        .quick-live {
+            background: linear-gradient(135deg, #166534, #052e16);
+            border-color: #22c55e;
+        }
+
+        .quick-ping {
+            background: linear-gradient(135deg, #1d4ed8, #172554);
+            border-color: #3b82f6;
+        }
+
+        .quick-discover {
+            background: linear-gradient(135deg, #6d28d9, #312e81);
+            border-color: #8b5cf6;
+        }
+
+        .system-card {
+            margin-top: 36px;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 16px;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .main {
+            padding: 28px;
+            background:
+                radial-gradient(circle at top right, rgba(124,58,237,0.12), transparent 35%),
+                radial-gradient(circle at bottom left, rgba(34,197,94,0.08), transparent 30%),
+                #070b1f;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 26px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .live {
+            color: #22c55e;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-btn {
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+        }
+
+        .live-btn {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            border: none;
+            font-weight: bold;
+        }
+
+        .updated {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(15,23,42,0.82);
+            border: 1px solid #1e293b;
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+            display: grid;
+            place-items: center;
+            font-size: 26px;
+        }
+
+        .purple { background: linear-gradient(135deg, #7c3aed, #4c1d95); }
+        .green { background: linear-gradient(135deg, #16a34a, #14532d); }
+        .orange { background: linear-gradient(135deg, #f59e0b, #7c2d12); }
+        .blue { background: linear-gradient(135deg, #2563eb, #0f172a); }
+
+        .stat-label {
+            color: #a78bfa;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .stat-number {
+            font-size: 30px;
+            font-weight: 900;
+            margin: 6px 0;
+        }
+
+        .stat-sub {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .grid-main {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .card {
+            background: rgba(15,23,42,0.82);
+            border: 1px solid #1e293b;
+            border-radius: 18px;
+            padding: 20px;
+        }
+
+        .card h2 {
+            margin: 0 0 16px;
+            font-size: 20px;
+        }
+
+        .graph {
+            height: 260px;
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            background:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 80px 52px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .legend {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-bottom: 10px;
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+
+        .legend span::before {
+            content: "";
+            display: inline-block;
+            width: 28px;
+            height: 6px;
+            border-radius: 10px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .ping-line::before { background: #22c55e; }
+        .loss-line::before { background: #8b5cf6; }
+
+        .ping-row {
+            display: grid;
+            grid-template-columns: 1.2fr .7fr 1.2fr;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #1e293b;
+            font-size: 14px;
+        }
+
+        .ping-ms { color: #22c55e; font-weight: bold; }
+        .offline { color: #f59e0b; font-weight: bold; }
+
+        .spark {
+            height: 28px;
+            background: linear-gradient(90deg, transparent, rgba(34,197,94,0.14), transparent);
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .spark::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            top: 13px;
+            height: 3px;
+            background: #22c55e;
+            border-radius: 10px;
+            box-shadow:
+                18px -6px 0 #22c55e,
+                36px 3px 0 #22c55e,
+                54px -9px 0 #22c55e,
+                72px 2px 0 #22c55e,
+                90px -4px 0 #22c55e;
+        }
+
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .donut {
+            width: 145px;
+            height: 145px;
+            border-radius: 50%;
+            background: conic-gradient(#22c55e 0 75%, #ef4444 75% 100%);
+            display: grid;
+            place-items: center;
+            margin: auto;
+        }
+
+        .donut-inner {
+            width: 96px;
+            height: 96px;
+            background: #0f172a;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .port-list {
+            display: grid;
+            gap: 10px;
+            color: #cbd5e1;
+        }
+
+        .alert-box {
+            background: rgba(127, 29, 29, 0.35);
+            border: 1px solid #7f1d1d;
+            border-radius: 14px;
+            padding: 14px;
+            color: #fecaca;
+            margin-bottom: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #1e293b;
+            text-align: left;
+        }
+
+        th {
+            color: #a3e635;
+            font-size: 13px;
+        }
+
+        .healthy-pill {
+            background: rgba(34,197,94,0.16);
+            color: #22c55e;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-weight: bold;
+        }
+
+        .offline-pill {
+            background: rgba(239,68,68,0.16);
+            color: #ef4444;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-weight: bold;
+        }
+
+        .action-link {
+            color: #93c5fd;
+            font-weight: bold;
+        }
+
+        .footer {
+            color: #8b5cf6;
+            text-align: center;
+            margin-top: 18px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .main { padding: 16px; }
+            .stats, .grid-main, .mini-grid { grid-template-columns: 1fr; }
+            .topbar { flex-direction: column; align-items: flex-start; gap: 14px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="layout">
+
+    <aside class="sidebar">
+        <div class="logo">DON</div>
+        <div class="sublogo">Dashboard</div>
+
+        <a class="nav-item active" href="/">🏠 Dashboard</a>
+       
+
+        <a class="nav-item" href="/topology">
+            🌐 Topology
+        </a>
+
+        <a class="nav-item" href="/devices">
+            🖥 Devices
+        </a>
+
+        <a class="nav-item" href="/actions">
+            ⚡ Actions
+        </a>
+
+        <a class="nav-item" href="/intelligence">
+            🧠 Intelligence
+        </a>
+
+        <a class="nav-item" href="/settings">
+            ⚙ Settings
+        </a>
+       
+
+        <div class="divider"></div>
+
+        <div class="quick-title">Quick Actions</div>
+        <button class="quick-btn quick-discover" onclick="location.reload()">⌁ Discover Network</button>
+        <button class="quick-btn quick-ping" onclick="location.reload()">⌁ Ping All Devices</button>
+        <button class="quick-btn quick-live" onclick="requestLiveInfo()">▣ Live Info (All)</button>
+        <button class="quick-btn">⇩ Export Report</button>
+
+        <div class="system-card">
+            <div><span class="dot"></span>System Status</div>
+            <strong style="color:#22c55e; display:block; margin-top:8px;">Healthy</strong>
+            <small>All systems operational</small>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <div class="topbar">
+            <h1>Network Operations Dashboard <span class="live">● Live</span></h1>
+
+            <div class="top-actions">
+                <button class="top-btn">☾</button>
+                <button class="top-btn">🔔</button>
+                <button class="top-btn live-btn" onclick="requestLiveInfo()">⟳ Request Live Info</button>
+                <div class="updated">Last updated:<br><strong id="clock">--:--:--</strong> <span class="dot"></span></div>
+            </div>
+        </div>
+
+        {% set total = devices|length %}
+        {% set healthy = devices|selectattr("health", "equalto", "Healthy")|list|length %}
+        {% set offline = devices|selectattr("health", "equalto", "Offline")|list|length %}
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-icon purple">⌘</div>
+                <div>
+                    <div class="stat-label">Total Devices</div>
+                    <div class="stat-number">{{ total }}</div>
+                    <div class="stat-sub">Online: {{ total - offline }} • Offline: {{ offline }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon green">♡</div>
+                <div>
+                    <div class="stat-label">Healthy</div>
+                    <div class="stat-number">{{ healthy }}</div>
+                    <div class="stat-sub">{{ ((healthy / total) * 100)|round|int if total else 0 }}% of devices</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon orange">⚠</div>
+                <div>
+                    <div class="stat-label">Alerts</div>
+                    <div class="stat-number">{{ offline }}</div>
+                    <div class="stat-sub">Requires attention</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon blue">▦</div>
+                <div>
+                    <div class="stat-label">Open Ports</div>
+                    <div class="stat-number">{{ devices | map(attribute='ports') | list | sum(start=[]) | length }}</div>
+                    <div class="stat-sub">Across all devices</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid-main">
+            <div class="card">
+                <h2>Live Network Overview</h2>
+                <div class="legend">
+                    <span class="ping-line">Average Ping (ms)</span>
+                    <span class="loss-line">Packet Loss (%)</span>
+                </div>
+
+                <div class="graph">
+                    <svg viewBox="0 0 800 260" preserveAspectRatio="none">
+                        <polyline points="0,180 80,175 160,178 240,165 320,181 400,172 480,120 560,174 640,169 720,176 800,170"
+                                  fill="none" stroke="#22c55e" stroke-width="5"/>
+                        <polyline points="0,235 80,232 160,235 240,230 320,234 400,236 480,210 560,235 640,232 720,234 800,231"
+                                  fill="none" stroke="#8b5cf6" stroke-width="5"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Live Ping Monitor</h2>
+
+                {% for device in devices %}
+                <div class="ping-row">
+                    <div>{{ device.ip }}</div>
+                    <div class="{% if device.health == 'Offline' %}offline{% else %}ping-ms{% endif %}">
+                        {% if device.health == 'Offline' %}Offline{% else %}{{ device.latency }}{% endif %}
+                    </div>
+                    <div class="spark"></div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="mini-grid">
+            <div class="card">
+                <h2>Device Health</h2>
+                <div class="donut">
+                    <div class="donut-inner">
+                        <div>{{ ((healthy / total) * 100)|round|int if total else 0 }}%</div>
+                        <small>Healthy</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Top Open Ports</h2>
+                <div class="port-list">
+                    <div>🔵 80 HTTP</div>
+                    <div>🟣 443 HTTPS</div>
+                    <div>🔵 8060 Roku ECP</div>
+                    <div>🟢 445 SMB</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Recent Alerts</h2>
+                {% for device in devices %}
+                    {% if device.health == "Offline" %}
+                    <div class="alert-box">⚠ {{ device.ip }} is offline<br><small>Device not responding to ping</small></div>
+                    {% endif %}
+                {% endfor %}
+                <button class="top-btn" style="width:100%;">View All Alerts</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Live Device Status</h2>
+
+            <table>
+                <tr>
+                    <th>Hostname</th>
+                    <th>IP Address</th>
+                    <th>MAC Address</th>
+                    <th>Status</th>
+                    <th>Response Time</th>
+                    <th>Open Ports</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+
+                {% for device in devices %}
+                <tr>
+                    <td>{{ device.hostname }}</td>
+                    <td>{{ device.ip }}</td>
+                    <td>{{ device.mac }}</td>
+                    <td>
+                        {% if device.health == "Healthy" %}
+                        <span class="healthy-pill">● Healthy</span>
+                        {% else %}
+                        <span class="offline-pill">● {{ device.health }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ device.latency }}</td>
+                    <td>{{ device.ports }}</td>
+                    <td>{{ device.type }}</td>
+                    <td>
+                        {% for action_device in actions %}
+                            {% if action_device.ip == device.ip %}
+                                {% if "Roku" in action_device.actions_checked %}
+                                    <a class="action-link" href="/roku/{{ device.ip }}">Roku</a>
+                                {% elif "Desktop" in action_device.actions_checked %}
+                                    <a class="action-link" href="/desktop/">Desktop</a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </section>
+
+        <div class="footer">DON - Network Operations Dashboard</div>
+    </main>
+</div>
+
+<script>
+function updateClock() {
+    const now = new Date();
+    document.getElementById("clock").textContent = now.toLocaleTimeString();
+}
+
+function requestLiveInfo() {
+    location.reload();
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,391 @@
+from pathlib import Path
+
+html = """<!DOCTYPE html>
+<html>
+<head>
+    <title>DON Topology</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top right, rgba(124,58,237,0.18), transparent 35%),
+                radial-gradient(circle at bottom left, rgba(34,197,94,0.10), transparent 30%),
+                #070b1f;
+            color: #f8fafc;
+            font-family: Arial, sans-serif;
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 26px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            color: #a78bfa;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        .back {
+            color: #f8fafc;
+            text-decoration: none;
+            background: linear-gradient(135deg, #7c3aed, #4c1d95);
+            padding: 13px 18px;
+            border-radius: 14px;
+            font-weight: bold;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .summary-card {
+            background: rgba(15,23,42,0.84);
+            border: 1px solid #1e293b;
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .summary-label {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .summary-value {
+            font-size: 28px;
+            font-weight: 900;
+            margin-top: 8px;
+        }
+
+        .green { color: #22c55e; }
+        .purple { color: #a78bfa; }
+        .orange { color: #f59e0b; }
+        .blue { color: #60a5fa; }
+
+        .topology-card {
+            background: rgba(15,23,42,0.84);
+            border: 1px solid #1e293b;
+            border-radius: 22px;
+            padding: 24px;
+            overflow-x: auto;
+        }
+
+        .map {
+            min-width: 900px;
+            position: relative;
+            padding: 24px 0 10px;
+        }
+
+        .tier {
+            display: flex;
+            justify-content: center;
+            gap: 26px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .node {
+            min-width: 190px;
+            background: #0f172a;
+            border: 1px solid #263244;
+            border-radius: 18px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+            position: relative;
+        }
+
+        .node.internet {
+            border-color: #60a5fa;
+            box-shadow: 0 0 25px rgba(96,165,250,0.28);
+        }
+
+        .node.gateway {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 25px rgba(139,92,246,0.28);
+        }
+
+        .node.device {
+            min-width: 220px;
+            text-align: left;
+        }
+
+        .node.healthy {
+            border-color: rgba(34,197,94,0.55);
+        }
+
+        .node.offline {
+            border-color: rgba(239,68,68,0.7);
+        }
+
+        .icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .name {
+            font-weight: 800;
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .meta {
+            color: #94a3b8;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .pill {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .pill.healthy {
+            background: rgba(34,197,94,0.14);
+            color: #22c55e;
+        }
+
+        .pill.offline {
+            background: rgba(239,68,68,0.14);
+            color: #ef4444;
+        }
+
+        .connector {
+            width: 2px;
+            height: 30px;
+            background: linear-gradient(#8b5cf6, #334155);
+            margin: -20px auto 10px;
+        }
+
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(210px, 1fr));
+            gap: 16px;
+        }
+
+        .section-title {
+            color: #a78bfa;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 18px 0 16px;
+            text-align: center;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            color: #cbd5e1;
+            font-size: 13px;
+            margin-top: 18px;
+        }
+
+        .legend-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .legend-green { background: #22c55e; }
+        .legend-red { background: #ef4444; }
+        .legend-purple { background: #8b5cf6; }
+
+        .details {
+            margin-top: 22px;
+            background: rgba(15,23,42,0.84);
+            border: 1px solid #1e293b;
+            border-radius: 22px;
+            padding: 22px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #1e293b;
+            text-align: left;
+        }
+
+        th {
+            color: #a3e635;
+            font-size: 13px;
+        }
+
+        @media (max-width: 900px) {
+            body { padding: 16px; }
+            .topbar { flex-direction: column; align-items: flex-start; gap: 14px; }
+            .summary { grid-template-columns: repeat(2, 1fr); }
+            .topology-card { padding: 14px; }
+        }
+    </style>
+</head>
+
+<body>
+
+    {% set total = devices|length %}
+    {% set healthy = devices|selectattr("health", "equalto", "Healthy")|list|length %}
+    {% set offline = devices|selectattr("health", "equalto", "Offline")|list|length %}
+    {% set ports_total = devices | map(attribute='ports') | list | sum(start=[]) | length %}
+
+    <div class="topbar">
+        <div>
+            <h1>DON Network Topology</h1>
+            <div class="subtitle">Internet → Google WiFi → Scanned Network → Devices</div>
+        </div>
+        <a class="back" href="/">← Back to Dashboard</a>
+    </div>
+
+    <section class="summary">
+        <div class="summary-card">
+            <div class="summary-label">Total Devices</div>
+            <div class="summary-value purple">{{ total }}</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-label">Healthy Devices</div>
+            <div class="summary-value green">{{ healthy }}</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-label">Offline Devices</div>
+            <div class="summary-value orange">{{ offline }}</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-label">Open Ports</div>
+            <div class="summary-value blue">{{ ports_total }}</div>
+        </div>
+    </section>
+
+    <section class="topology-card">
+        <div class="map">
+
+            <div class="tier">
+                <div class="node internet">
+                    <div class="icon">🌐</div>
+                    <div class="name">Internet</div>
+                    <div class="meta">Public network / ISP uplink</div>
+                    <span class="pill healthy">UPSTREAM</span>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="tier">
+                <div class="node gateway">
+                    <div class="icon">📡</div>
+                    <div class="name">Google WiFi Gateway</div>
+                    <div class="meta">Router • DHCP • NAT<br>Scanned LAN</div>
+                    <span class="pill healthy">GATEWAY</span>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="section-title">Devices On Network</div>
+
+            <div class="devices-grid">
+                {% for device in devices %}
+                <div class="node device {% if device.health == 'Healthy' %}healthy{% elif device.health == 'Offline' %}offline{% endif %}">
+                    <div class="icon">
+                        {% if device.type == "Roku" %}
+                            📺
+                        {% elif "Windows" in device.type %}
+                            🖥️
+                        {% elif "Web" in device.type %}
+                            🌐
+                        {% elif "Camera" in device.type %}
+                            📷
+                        {% else %}
+                            📱
+                        {% endif %}
+                    </div>
+
+                    <div class="name">{{ device.hostname }}</div>
+
+                    <div class="meta">
+                        IP: {{ device.ip }}<br>
+                        MAC: {{ device.mac }}<br>
+                        Type: {{ device.type }}<br>
+                        Ports: {{ device.ports }}<br>
+                        Latency: {{ device.latency }}
+                    </div>
+
+                    {% if device.health == "Healthy" %}
+                        <span class="pill healthy">● Healthy</span>
+                    {% else %}
+                        <span class="pill offline">● {{ device.health }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="legend">
+                <span><span class="legend-dot legend-purple"></span>Gateway</span>
+                <span><span class="legend-dot legend-green"></span>Healthy</span>
+                <span><span class="legend-dot legend-red"></span>Offline / Warning</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="details">
+        <h2>Topology Details</h2>
+
+        <table>
+            <tr>
+                <th>Hostname</th>
+                <th>IP</th>
+                <th>MAC</th>
+                <th>Health</th>
+                <th>Type</th>
+                <th>Ports</th>
+                <th>Latency</th>
+            </tr>
+
+            {% for device in devices %}
+            <tr>
+                <td>{{ device.hostname }}</td>
+                <td>{{ device.ip }}</td>
+                <td>{{ device.mac }}</td>
+                <td>{{ device.health }}</td>
+                <td>{{ device.type }}</td>
+                <td>{{ device.ports }}</td>
+                <td>{{ device.latency }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </section>
+
+</body>
+</html>
+"""
+
+path = Path("/mnt/data/topology.html")
+path.write_text(html, encoding="utf-8")
+print(path)

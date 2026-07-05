@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Roku Controller</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #15112a, #05070d 65%);
+            color: #f8fafc;
+            font-family: Arial, sans-serif;
+            padding: 18px 14px 34px;
+        }
+
+        .app {
+            max-width: 430px;
+            margin: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+
+        h1 {
+            margin: 8px 0;
+            font-size: 31px;
+            color: #a78bfa;
+        }
+
+        .ip {
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+
+        .ip strong { color: #a78bfa; }
+
+        #status {
+            margin-top: 8px;
+            color: #4ade80;
+            font-size: 14px;
+            min-height: 18px;
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 18px 0;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid #263244;
+            padding: 8px;
+            border-radius: 18px;
+        }
+
+        .tab-btn {
+            height: 48px;
+            border-radius: 14px;
+            background: #0f172a;
+            border: 1px solid #263244;
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(145deg, #7c3aed, #4c1d95);
+            color: white;
+            border-color: #8b5cf6;
+            box-shadow: 0 8px 18px rgba(124,58,237,0.35);
+        }
+
+        .panel {
+            display: none;
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid #263244;
+            border-radius: 22px;
+            padding: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        }
+
+        .panel.active { display: block; }
+
+        button {
+            border: none;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        button:active, .back:active {
+            transform: scale(0.96);
+            opacity: 0.84;
+        }
+
+        .section-title {
+            text-align: center;
+            color: #a78bfa;
+            font-size: 22px;
+            font-weight: bold;
+            margin: 6px 0 16px;
+        }
+
+        .quick-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .tile {
+            height: 82px;
+            border-radius: 18px;
+            background: #0f172a;
+            border: 1px solid #263244;
+            color: white;
+            font-size: 15px;
+        }
+
+        .tile .emoji {
+            display: block;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .dpad-wrap {
+            display: flex;
+            justify-content: center;
+            margin: 6px 0 26px;
+        }
+
+        .dpad {
+            position: relative;
+            width: 230px;
+            height: 230px;
+        }
+
+        .dpad button {
+            position: absolute;
+            background: linear-gradient(145deg, #7c3aed, #4c1d95);
+            color: white;
+            border: 1px solid #8b5cf6;
+            box-shadow: 0 12px 25px rgba(124,58,237,0.35);
+        }
+
+        .up, .down {
+            left: 75px;
+            width: 80px;
+            height: 82px;
+            border-radius: 22px;
+            font-size: 34px;
+        }
+
+        .up { top: 0; }
+        .down { bottom: 0; }
+
+        .left, .right {
+            top: 75px;
+            width: 82px;
+            height: 80px;
+            border-radius: 22px;
+            font-size: 34px;
+        }
+
+        .left { left: 0; }
+        .right { right: 0; }
+
+        .ok {
+            top: 65px;
+            left: 65px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(145deg, #8b5cf6, #5b21b6) !important;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .control {
+            height: 74px;
+            border-radius: 16px;
+            background: #0f172a;
+            color: white;
+            border: 1px solid #263244;
+            font-size: 14px;
+        }
+
+        .control span {
+            display: block;
+            font-size: 23px;
+            margin-bottom: 6px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0 16px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid #263244;
+            background: #0f172a;
+            color: white;
+            font-size: 16px;
+            min-width: 0;
+        }
+
+        .search-box button {
+            padding: 14px 12px;
+            border-radius: 14px;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            font-size: 15px;
+            white-space: nowrap;
+        }
+
+        .hint {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .app-btn {
+            height: 84px;
+            border-radius: 18px;
+            color: white;
+            background: #0f172a;
+            border: 1px solid #263244;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .app-btn.youtube { background: linear-gradient(145deg, #dc2626, #7f1d1d); }
+        .app-btn.netflix { background: linear-gradient(145deg, #991b1b, #450a0a); }
+        .app-btn.disney { background: linear-gradient(145deg, #1d4ed8, #1e1b4b); }
+        .app-btn.prime { background: linear-gradient(145deg, #0284c7, #0f172a); }
+
+        .system-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .system-btn {
+            width: 100%;
+            min-height: 64px;
+            border-radius: 16px;
+            background: #0f172a;
+            border: 1px solid #263244;
+            color: white;
+            font-size: 16px;
+            text-align: left;
+            padding: 0 16px;
+        }
+
+        .system-btn span {
+            font-size: 22px;
+            margin-right: 8px;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            padding: 17px;
+            margin-top: 18px;
+            border-radius: 18px;
+            background: #0f172a;
+            border: 1px solid #263244;
+            color: #a78bfa;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+
+    <div class="header">
+        <h1>Roku Controller</h1>
+        <div class="ip">Connected to: <strong>{{ ip }}</strong></div>
+        <div id="status">Ready</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('remote', this)">Remote</button>
+        <button class="tab-btn" onclick="showTab('search', this)">Search</button>
+        <button class="tab-btn" onclick="showTab('apps', this)">Apps</button>
+        <button class="tab-btn" onclick="showTab('system', this)">System</button>
+    </div>
+
+    <div id="remote" class="panel active">
+        <div class="section-title">Remote</div>
+
+        <div class="quick-row">
+            <button class="tile" onclick="sendCommand('home')"><span class="emoji">⌂</span>Home</button>
+            <button class="tile" onclick="sendCommand('youtube')"><span class="emoji">▶</span>YouTube</button>
+            <button class="tile" onclick="sendCommand('back')"><span class="emoji">↩</span>Back</button>
+        </div>
+
+        <div class="dpad-wrap">
+            <div class="dpad">
+                <button class="up" onclick="sendCommand('up')">⌃</button>
+                <button class="left" onclick="sendCommand('left')">‹</button>
+                <button class="ok" onclick="sendCommand('select')">OK</button>
+                <button class="right" onclick="sendCommand('right')">›</button>
+                <button class="down" onclick="sendCommand('down')">⌄</button>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            <button class="control" onclick="sendCommand('back')"><span>↶</span>Back</button>
+            <button class="control" onclick="sendCommand('select')"><span>✱</span>Select</button>
+            <button class="control" onclick="sendCommand('play')"><span>⏯</span>Play</button>
+        </div>
+
+        <div class="grid-4">
+            <button class="control"
+                onclick="sendCommand('volume_up')"
+                onmousedown="startHold('volume_up')"
+                onmouseup="stopHold()"
+                onmouseleave="stopHold()"
+                ontouchstart="startHold('volume_up')"
+                ontouchend="stopHold()">
+                <span>🔊</span>Vol +
+            </button>
+
+            <button class="control"
+                onclick="sendCommand('volume_down')"
+                onmousedown="startHold('volume_down')"
+                onmouseup="stopHold()"
+                onmouseleave="stopHold()"
+                ontouchstart="startHold('volume_down')"
+                ontouchend="stopHold()">
+                <span>🔉</span>Vol -
+            </button>
+
+            <button class="control" onclick="sendCommand('mute')"><span>🔇</span>Mute</button>
+            <button class="control" onclick="sendCommand('play')"><span>▶</span>Play</button>
+        </div>
+    </div>
+
+    <div id="search" class="panel">
+        <div class="section-title">Search</div>
+        <div class="hint">Tap the box, use your iPhone microphone, then press Send Text. Press Open Search first if the Roku search field is not focused.</div>
+
+        <button class="tile" style="width:100%; margin-bottom:12px;" onclick="sendCommand('search')">
+            <span class="emoji">⌕</span>Open Search
+        </button>
+
+        <div class="search-box">
+            <input id="searchText" type="text" placeholder="Talk or type search..." autocomplete="off">
+            <button onclick="typeText()">Send Text</button>
+        </div>
+
+        <div class="grid-3">
+            <button class="control" onclick="sendCommand('select')"><span>OK</span>Select</button>
+            <button class="control" onclick="sendCommand('back')"><span>↩</span>Back</button>
+            <button class="control" onclick="sendCommand('youtube')"><span>▶</span>YouTube</button>
+        </div>
+    </div>
+
+    <div id="apps" class="panel">
+        <div class="section-title">Apps</div>
+
+        <div class="app-grid">
+            <button class="app-btn netflix" onclick="sendCommand('netflix')">Netflix</button>
+            <button class="app-btn youtube" onclick="sendCommand('youtube')">YouTube</button>
+            <button class="app-btn disney" onclick="sendCommand('disney')">Disney+</button>
+            <button class="app-btn prime" onclick="sendCommand('prime')">Prime</button>
+        </div>
+
+        <div class="hint" style="margin-top:14px;">
+            Note: Netflix, Disney+, and Prime need app IDs added in roku.py before they launch correctly.
+        </div>
+    </div>
+
+    <div id="system" class="panel">
+        <div class="section-title">System</div>
+
+        <div class="system-list">
+            <button class="system-btn" onclick="sendCommand('power')"><span>⏻</span> Power</button>
+            <button class="system-btn" onclick="sendCommand('home')"><span>⌂</span> Home</button>
+            <button class="system-btn" onclick="sendCommand('info')"><span>ⓘ</span> Device Info</button>
+            <button class="system-btn" onclick="sendCommand('apps')"><span>▦</span> Installed Apps</button>
+            <button class="system-btn" onclick="sendCommand('reboot')"><span>↻</span> Reboot</button>
+        </div>
+    </div>
+
+    <a class="back" href="/">← Back to DON</a>
+
+</div>
+
+<script>
+let holdInterval = null;
+
+function showTab(tabId, button) {
+    document.querySelectorAll(".panel").forEach(panel => {
+        panel.classList.remove("active");
+    });
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    document.getElementById(tabId).classList.add("active");
+    button.classList.add("active");
+}
+
+async function sendCommand(command) {
+    const status = document.getElementById("status");
+    status.textContent = "Sending " + command + "...";
+
+    try {
+        const response = await fetch(`/roku/{{ ip }}/${command}`, {
+            method: "POST"
+        });
+
+        const text = await response.text();
+        status.textContent = response.ok ? "✓ " + text : "✗ " + text;
+
+    } catch (error) {
+        status.textContent = "Error: " + error;
+    }
+}
+
+function startHold(command) {
+    sendCommand(command);
+
+    if (holdInterval) {
+        clearInterval(holdInterval);
+    }
+
+    holdInterval = setInterval(() => {
+        sendCommand(command);
+    }, 250);
+}
+
+function stopHold() {
+    if (holdInterval) {
+        clearInterval(holdInterval);
+        holdInterval = null;
+    }
+}
+
+async function typeText() {
+    const input = document.getElementById("searchText");
+    const text = input.value;
+    const status = document.getElementById("status");
+
+    if (!text.trim()) {
+        status.textContent = "Enter text first.";
+        return;
+    }
+
+    status.textContent = "Typing text...";
+
+    try {
+        const response = await fetch(`/roku/{{ ip }}/type_text`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: "text=" + encodeURIComponent(text)
+        });
+
+        const result = await response.text();
+        status.textContent = response.ok ? "✓ " + result : "✗ " + result;
+
+    } catch (error) {
+        status.textContent = "Error: " + error;
+    }
+}
+</script>
+
+</body>
+</html>

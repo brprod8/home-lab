@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Desktop Control</title>
+    <style>
+        body {
+            background:#111;
+            color:#eee;
+            font-family:Arial;
+            padding:20px;
+        }
+
+        h1 {
+            color:#38bdf8;
+        }
+
+        .card {
+            background:#1e1e1e;
+            padding:15px;
+            margin-bottom:20px;
+            border-radius:10px;
+        }
+
+        button {
+            padding:12px;
+            font-size:16px;
+            border-radius:8px;
+            border:none;
+            background:#2563eb;
+            color:white;
+        }
+
+        select {
+            padding:10px;
+            font-size:16px;
+            border-radius:8px;
+        }
+
+        textarea {
+            width:100%;
+            background:#000;
+            color:#00ff7f;
+            font-family:monospace;
+            font-size:15px;
+            padding:10px;
+            border-radius:8px;
+            border:1px solid #333;
+        }
+
+        pre {
+            background:#000;
+            color:#00ff7f;
+            padding:15px;
+            overflow:auto;
+            border-radius:8px;
+            white-space:pre-wrap;
+        }
+
+        a {
+            color:#60a5fa;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Desktop Control</h1>
+
+<div class="card">
+    <h2>Desktop Health</h2>
+    <ul id="healthList">
+        {% for key, value in health.items() %}
+        <li>{{ key }}: {{ value }}</li>
+        {% endfor %}
+    </ul>
+    <button onclick="refreshHealth()">Refresh Health</button>
+</div>
+
+<div class="card">
+    <h2>Write and Run Python</h2>
+
+    <form id="codeForm">
+        <textarea name="code" id="codeBox" rows="12">print("Hello from my iPhone")
+print("DON remote Python execution works")</textarea>
+        <br><br>
+        <button type="submit">Run Code</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Run Saved Python Script</h2>
+
+    <form id="scriptForm">
+        <select name="script" id="scriptSelect">
+            {% for script in scripts %}
+            <option value="{{ script }}">{{ script }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Run Script</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Output</h2>
+    <pre id="outputBox">Output will appear here.</pre>
+</div>
+
+<a href="/">Back to DON</a>
+
+<script>
+document.getElementById("codeForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const code = document.getElementById("codeBox").value;
+    const outputBox = document.getElementById("outputBox");
+
+    outputBox.textContent = "Running code...";
+
+    const response = await fetch("/desktop/run_code", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "code=" + encodeURIComponent(code)
+    });
+
+    const text = await response.text();
+    outputBox.textContent = text;
+});
+
+
+document.getElementById("scriptForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const script = document.getElementById("scriptSelect").value;
+    const outputBox = document.getElementById("outputBox");
+
+    outputBox.textContent = "Running script...";
+
+    const response = await fetch("/desktop/run", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "script=" + encodeURIComponent(script)
+    });
+
+    const text = await response.text();
+    outputBox.textContent = text;
+});
+
+
+async function refreshHealth() {
+    const response = await fetch("/desktop/health");
+    const data = await response.json();
+
+    const healthList = document.getElementById("healthList");
+    healthList.innerHTML = "";
+
+    for (const key in data) {
+        const item = document.createElement("li");
+        item.textContent = key + ": " + data[key];
+        healthList.appendChild(item);
+    }
+}
+</script>
+
+</body>
+</html>

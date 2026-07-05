@@ -1,0 +1,13 @@
+# Change this to scan your network.
+
+
+SUBNET = "192.168.86"
+
+COMMON_PORTS = [
+    21, 22, 23, 53, 80, 443, 445,
+    554, 8060, 8080, 8443, 9000, 3389
+]
+
+PING_TIMEOUT_MS = "700"
+PORT_TIMEOUT_SECONDS = 0.3
+MAX_WORKERS = 50
