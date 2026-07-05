@@ -73,7 +73,7 @@ The iPhone connects through Safari and becomes a wireless control panel.
 - Network Overview
 
 <p align="center">
-<img src="pics/dashboard.png" width="900">
+<img src="pics/mobile.png" width="900">
 </p>
 
 ---
@@ -96,7 +96,7 @@ Features include
 - Long Press Volume
 
 <p align="center">
-<img src="pics/roku.png" width="350">
+<img src="pics/roku-controller.png" width="350">
 </p>
 
 Communication uses Roku's External Control Protocol (ECP).
@@ -127,7 +127,7 @@ Features
 - Remote Script Execution
 
 <p align="center">
-<img src="pics/desktop.png" width="800">
+<img src="pics/desktop-control.png" width="800">
 </p>
 
 Example
