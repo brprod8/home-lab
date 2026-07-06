@@ -126,6 +126,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 14px;
             margin-bottom: 26px;
         }
 
@@ -144,6 +145,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .top-btn {
@@ -153,6 +155,7 @@
             border-radius: 12px;
             padding: 12px 16px;
             cursor: pointer;
+            text-decoration: none;
         }
 
         .live-btn {
@@ -226,6 +229,7 @@
             border: 1px solid #1e293b;
             border-radius: 18px;
             padding: 20px;
+            overflow-x: auto;
         }
 
         .card h2 {
@@ -241,7 +245,6 @@
                 linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
             background-size: 80px 52px;
-            position: relative;
             overflow: hidden;
         }
 
@@ -259,19 +262,6 @@
             font-size: 13px;
         }
 
-        .legend span::before {
-            content: "";
-            display: inline-block;
-            width: 28px;
-            height: 6px;
-            border-radius: 10px;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-
-        .ping-line::before { background: #22c55e; }
-        .loss-line::before { background: #8b5cf6; }
-
         .ping-row {
             display: grid;
             grid-template-columns: 1.2fr .7fr 1.2fr;
@@ -288,24 +278,6 @@
             height: 28px;
             background: linear-gradient(90deg, transparent, rgba(34,197,94,0.14), transparent);
             border-radius: 8px;
-            position: relative;
-        }
-
-        .spark::after {
-            content: "";
-            position: absolute;
-            left: 4px;
-            right: 4px;
-            top: 13px;
-            height: 3px;
-            background: #22c55e;
-            border-radius: 10px;
-            box-shadow:
-                18px -6px 0 #22c55e,
-                36px 3px 0 #22c55e,
-                54px -9px 0 #22c55e,
-                72px 2px 0 #22c55e,
-                90px -4px 0 #22c55e;
         }
 
         .mini-grid {
@@ -351,10 +323,19 @@
             margin-bottom: 12px;
         }
 
+        .clear-box {
+            color: #22c55e;
+            background: rgba(22, 101, 52, 0.25);
+            border: 1px solid rgba(34,197,94,0.35);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
+            min-width: 850px;
         }
 
         th, td {
@@ -387,6 +368,7 @@
         .action-link {
             color: #93c5fd;
             font-weight: bold;
+            text-decoration: none;
         }
 
         .footer {
@@ -401,7 +383,7 @@
             .sidebar { display: none; }
             .main { padding: 16px; }
             .stats, .grid-main, .mini-grid { grid-template-columns: 1fr; }
-            .topbar { flex-direction: column; align-items: flex-start; gap: 14px; }
+            .topbar { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -414,41 +396,21 @@
         <div class="sublogo">Dashboard</div>
 
         <a class="nav-item active" href="/">🏠 Dashboard</a>
-       
-
-        <a class="nav-item" href="/topology">
-            🌐 Topology
-        </a>
-
-        <a class="nav-item" href="/devices">
-            🖥 Devices
-        </a>
-
-        <a class="nav-item" href="/actions">
-            ⚡ Actions
-        </a>
-
-        <a class="nav-item" href="/intelligence">
-            🧠 Intelligence
-        </a>
-
-        <a class="nav-item" href="/settings">
-            ⚙ Settings
-        </a>
+        <a class="nav-item" href="/topology">🌐 Topology</a>
        
 
         <div class="divider"></div>
 
         <div class="quick-title">Quick Actions</div>
-        <button class="quick-btn quick-discover" onclick="location.reload()">⌁ Discover Network</button>
-        <button class="quick-btn quick-ping" onclick="location.reload()">⌁ Ping All Devices</button>
+        <button class="quick-btn quick-discover" onclick="discoverNetwork()">⌁ Discover Network</button>
+        <button class="quick-btn quick-ping" onclick="pingDonDevices()">⌁ Ping DON Devices</button>
         <button class="quick-btn quick-live" onclick="requestLiveInfo()">▣ Live Info (All)</button>
-        <button class="quick-btn">⇩ Export Report</button>
+        <button class="quick-btn" onclick="window.location='/logs'">⇩ View Logs</button>
 
         <div class="system-card">
             <div><span class="dot"></span>System Status</div>
-            <strong style="color:#22c55e; display:block; margin-top:8px;">Healthy</strong>
-            <small>All systems operational</small>
+            <strong id="systemStatusText" style="color:#22c55e; display:block; margin-top:8px;">Healthy</strong>
+            <small id="systemStatusSub">All systems operational</small>
         </div>
     </aside>
 
@@ -461,7 +423,12 @@
                 <button class="top-btn">☾</button>
                 <button class="top-btn">🔔</button>
                 <button class="top-btn live-btn" onclick="requestLiveInfo()">⟳ Request Live Info</button>
-                <div class="updated">Last updated:<br><strong id="clock">--:--:--</strong> <span class="dot"></span></div>
+
+                <div class="updated">
+                    Last updated:<br>
+                    <strong id="clock">--:--:--</strong>
+                    <span class="dot"></span>
+                </div>
             </div>
         </div>
 
@@ -474,8 +441,8 @@
                 <div class="stat-icon purple">⌘</div>
                 <div>
                     <div class="stat-label">Total Devices</div>
-                    <div class="stat-number">{{ total }}</div>
-                    <div class="stat-sub">Online: {{ total - offline }} • Offline: {{ offline }}</div>
+                    <div class="stat-number" id="totalDevices">{{ total }}</div>
+                    <div class="stat-sub" id="totalDevicesSub">Online: {{ total - offline }} • Offline: {{ offline }}</div>
                 </div>
             </div>
 
@@ -483,8 +450,8 @@
                 <div class="stat-icon green">♡</div>
                 <div>
                     <div class="stat-label">Healthy</div>
-                    <div class="stat-number">{{ healthy }}</div>
-                    <div class="stat-sub">{{ ((healthy / total) * 100)|round|int if total else 0 }}% of devices</div>
+                    <div class="stat-number" id="healthyDevices">{{ healthy }}</div>
+                    <div class="stat-sub" id="healthyPercent">{{ ((healthy / total) * 100)|round|int if total else 0 }}% of devices</div>
                 </div>
             </div>
 
@@ -492,8 +459,8 @@
                 <div class="stat-icon orange">⚠</div>
                 <div>
                     <div class="stat-label">Alerts</div>
-                    <div class="stat-number">{{ offline }}</div>
-                    <div class="stat-sub">Requires attention</div>
+                    <div class="stat-number" id="alertDevices">{{ offline }}</div>
+                    <div class="stat-sub" id="alertsSub">Requires attention</div>
                 </div>
             </div>
 
@@ -501,7 +468,7 @@
                 <div class="stat-icon blue">▦</div>
                 <div>
                     <div class="stat-label">Open Ports</div>
-                    <div class="stat-number">{{ devices | map(attribute='ports') | list | sum(start=[]) | length }}</div>
+                    <div class="stat-number" id="openPorts">{{ devices | map(attribute='ports') | list | sum(start=[]) | length }}</div>
                     <div class="stat-sub">Across all devices</div>
                 </div>
             </div>
@@ -511,15 +478,17 @@
             <div class="card">
                 <h2>Live Network Overview</h2>
                 <div class="legend">
-                    <span class="ping-line">Average Ping (ms)</span>
-                    <span class="loss-line">Packet Loss (%)</span>
+                    <span>Average Ping (ms)</span>
+                    <span>Packet Loss (%)</span>
                 </div>
 
                 <div class="graph">
-                    <svg viewBox="0 0 800 260" preserveAspectRatio="none">
-                        <polyline points="0,180 80,175 160,178 240,165 320,181 400,172 480,120 560,174 640,169 720,176 800,170"
+                    <svg id="networkGraph" viewBox="0 0 800 260" preserveAspectRatio="none">
+                        <polyline id="latencyLine"
+                                  points="0,180 80,175 160,178 240,165 320,181 400,172 480,120 560,174 640,169 720,176 800,170"
                                   fill="none" stroke="#22c55e" stroke-width="5"/>
-                        <polyline points="0,235 80,232 160,235 240,230 320,234 400,236 480,210 560,235 640,232 720,234 800,231"
+                        <polyline id="lossLine"
+                                  points="0,235 80,232 160,235 240,230 320,234 400,236 480,210 560,235 640,232 720,234 800,231"
                                   fill="none" stroke="#8b5cf6" stroke-width="5"/>
                     </svg>
                 </div>
@@ -527,25 +496,26 @@
 
             <div class="card">
                 <h2>Live Ping Monitor</h2>
-
-                {% for device in devices %}
-                <div class="ping-row">
-                    <div>{{ device.ip }}</div>
-                    <div class="{% if device.health == 'Offline' %}offline{% else %}ping-ms{% endif %}">
-                        {% if device.health == 'Offline' %}Offline{% else %}{{ device.latency }}{% endif %}
+                <div id="pingMonitor">
+                    {% for device in devices %}
+                    <div class="ping-row">
+                        <div>{{ device.ip }}</div>
+                        <div class="{% if device.health == 'Offline' %}offline{% else %}ping-ms{% endif %}">
+                            {% if device.health == 'Offline' %}Offline{% else %}{{ device.latency }}{% endif %}
+                        </div>
+                        <div class="spark"></div>
                     </div>
-                    <div class="spark"></div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </section>
 
         <section class="mini-grid">
             <div class="card">
                 <h2>Device Health</h2>
-                <div class="donut">
+                <div class="donut" id="healthDonut">
                     <div class="donut-inner">
-                        <div>{{ ((healthy / total) * 100)|round|int if total else 0 }}%</div>
+                        <div id="donutPercent">{{ ((healthy / total) * 100)|round|int if total else 0 }}%</div>
                         <small>Healthy</small>
                     </div>
                 </div>
@@ -553,29 +523,24 @@
 
             <div class="card">
                 <h2>Top Open Ports</h2>
-                <div class="port-list">
-                    <div>🔵 80 HTTP</div>
-                    <div>🟣 443 HTTPS</div>
-                    <div>🔵 8060 Roku ECP</div>
-                    <div>🟢 445 SMB</div>
+                <div class="port-list" id="topPorts">
+                    <div>Loading port data...</div>
                 </div>
             </div>
 
             <div class="card">
                 <h2>Recent Alerts</h2>
-                {% for device in devices %}
-                    {% if device.health == "Offline" %}
-                    <div class="alert-box">⚠ {{ device.ip }} is offline<br><small>Device not responding to ping</small></div>
-                    {% endif %}
-                {% endfor %}
-                <button class="top-btn" style="width:100%;">View All Alerts</button>
+                <div id="recentAlerts">
+                    <div>Loading alerts...</div>
+                </div>
+                <button class="top-btn" style="width:100%; margin-top:12px;">View All Alerts</button>
             </div>
         </section>
 
         <section class="card">
             <h2>Live Device Status</h2>
 
-            <table>
+            <table id="deviceTable">
                 <tr>
                     <th>Hostname</th>
                     <th>IP Address</th>
@@ -590,7 +555,11 @@
                 {% for device in devices %}
                 <tr>
                     <td>{{ device.hostname }}</td>
-                    <td>{{ device.ip }}</td>
+                    <td>
+                        <a class="action-link" href="/device/{{ device.ip }}">
+                            {{ device.ip }}
+                        </a>
+                    </td>
                     <td>{{ device.mac }}</td>
                     <td>
                         {% if device.health == "Healthy" %}
@@ -625,19 +594,365 @@
 </div>
 
 <script>
+let refreshTimer = null;
+
 function updateClock() {
-    const now = new Date();
-    document.getElementById("clock").textContent = now.toLocaleTimeString();
+    document.getElementById("clock").textContent = new Date().toLocaleTimeString();
 }
 
-function requestLiveInfo() {
-    location.reload();
+function safeText(value) {
+    if (value === null || value === undefined || value === "") {
+        return "Unknown";
+    }
+    return value;
+}
+
+function portsToText(ports) {
+    if (!ports || ports.length === 0) {
+        return "";
+    }
+    return Array.isArray(ports) ? ports.join(", ") : ports;
+}
+
+function getLatencyNumber(latency) {
+    if (!latency) return null;
+    const match = String(latency).match(/\\d+/);
+    return match ? parseInt(match[0]) : null;
+}
+
+function getActionHTML(device, actions) {
+    let html = "-";
+
+    actions.forEach(actionDevice => {
+        if (actionDevice.ip === device.ip) {
+            const checked = actionDevice.actions_checked || "";
+
+            if (checked.includes("Roku")) {
+                html = `<a class="action-link" href="/roku/${device.ip}">Roku</a>`;
+            } else if (checked.includes("Desktop")) {
+                html = `<a class="action-link" href="/desktop/">Desktop</a>`;
+            }
+        }
+    });
+
+    return html;
+}
+
+function updateStats(devices) {
+    let healthy = 0;
+    let offline = 0;
+    let totalPorts = 0;
+
+    devices.forEach(device => {
+        if (device.health === "Healthy") {
+            healthy++;
+        } else {
+            offline++;
+        }
+
+        if (Array.isArray(device.ports)) {
+            totalPorts += device.ports.length;
+        }
+    });
+
+    const total = devices.length;
+    const percent = total > 0 ? Math.round((healthy / total) * 100) : 0;
+
+    document.getElementById("totalDevices").innerText = total;
+    document.getElementById("healthyDevices").innerText = healthy;
+    document.getElementById("alertDevices").innerText = offline;
+    document.getElementById("openPorts").innerText = totalPorts;
+
+    document.getElementById("totalDevicesSub").innerText =
+        "Online: " + (total - offline) + " • Offline: " + offline;
+
+    document.getElementById("healthyPercent").innerText = percent + "% of devices";
+    document.getElementById("donutPercent").innerText = percent + "%";
+
+    document.getElementById("healthDonut").style.background =
+        `conic-gradient(#22c55e 0 ${percent}%, #ef4444 ${percent}% 100%)`;
+
+    document.getElementById("alertsSub").innerText =
+        offline === 0 ? "No issues detected" : "Requires attention";
+
+    document.getElementById("systemStatusText").innerText =
+        offline === 0 ? "Healthy" : "Attention Needed";
+
+    document.getElementById("systemStatusText").style.color =
+        offline === 0 ? "#22c55e" : "#f59e0b";
+
+    document.getElementById("systemStatusSub").innerText =
+        offline === 0 ? "All systems operational" : offline + " device(s) need attention";
+}
+
+function updateDeviceTable(devices, actions) {
+    let html = `
+        <tr>
+            <th>Hostname</th>
+            <th>IP Address</th>
+            <th>MAC Address</th>
+            <th>Status</th>
+            <th>Response Time</th>
+            <th>Open Ports</th>
+            <th>Type</th>
+            <th>Actions</th>
+        </tr>
+    `;
+
+    devices.forEach(device => {
+        const healthHTML =
+            device.health === "Healthy"
+                ? `<span class="healthy-pill">● Healthy</span>`
+                : `<span class="offline-pill">● ${safeText(device.health)}</span>`;
+
+        html += `
+            <tr>
+                <td>${safeText(device.hostname)}</td>
+                <td><a class="action-link" href="/device/${device.ip}">${device.ip}</a></td>
+                <td>${safeText(device.mac)}</td>
+                <td>${healthHTML}</td>
+                <td>${safeText(device.latency)}</td>
+                <td>${portsToText(device.ports)}</td>
+                <td>${safeText(device.type)}</td>
+                <td>${getActionHTML(device, actions)}</td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("deviceTable").innerHTML = html;
+}
+
+function updatePingMonitor(devices) {
+    let html = "";
+
+    devices.forEach(device => {
+        const isOffline = device.health === "Offline";
+        html += `
+            <div class="ping-row">
+                <div>
+                    <a class="action-link" href="/device/${device.ip}">${device.ip}</a>
+                </div>
+                <div class="${isOffline ? "offline" : "ping-ms"}">
+                    ${isOffline ? "Offline" : safeText(device.latency)}
+                </div>
+                <div class="spark"></div>
+            </div>
+        `;
+    });
+
+    document.getElementById("pingMonitor").innerHTML = html;
+}
+
+function updateAlerts(devices) {
+    const offlineDevices = devices.filter(device => device.health === "Offline");
+    let html = "";
+
+    if (offlineDevices.length === 0) {
+        html = `<div class="clear-box">No active alerts.</div>`;
+    } else {
+        offlineDevices.forEach(device => {
+            html += `
+                <div class="alert-box">
+                    ⚠ ${device.ip} is offline<br>
+                    <small>${safeText(device.hostname)} did not respond during the latest scan.</small>
+                </div>
+            `;
+        });
+    }
+
+    document.getElementById("recentAlerts").innerHTML = html;
+}
+
+function updateTopPorts(devices) {
+    const counts = {};
+
+    devices.forEach(device => {
+        if (Array.isArray(device.ports)) {
+            device.ports.forEach(port => {
+                counts[port] = (counts[port] || 0) + 1;
+            });
+        }
+    });
+
+    const sorted = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4);
+
+    let html = "";
+
+    if (sorted.length === 0) {
+        html = "<div>No open ports detected.</div>";
+    } else {
+        sorted.forEach(([port, count]) => {
+            html += `<div>🔵 ${port} seen on ${count} device(s)</div>`;
+        });
+    }
+
+    document.getElementById("topPorts").innerHTML = html;
+}
+
+function updateGraph(devices) {
+    const healthy = devices.filter(d => d.health === "Healthy").length;
+    const total = devices.length || 1;
+    const offline = total - healthy;
+    const healthPercent = healthy / total;
+
+    const baseY = 220 - (healthPercent * 120);
+    const latencyPoints = [
+        `0,${baseY + 20}`,
+        `100,${baseY + 5}`,
+        `200,${baseY + 18}`,
+        `300,${baseY - 10}`,
+        `400,${baseY + 12}`,
+        `500,${baseY}`,
+        `600,${baseY + 16}`,
+        `700,${baseY - 4}`,
+        `800,${baseY + 8}`
+    ].join(" ");
+
+    const lossY = 240 - (offline * 12);
+    const lossPoints = [
+        `0,240`,
+        `100,${lossY}`,
+        `200,240`,
+        `300,${lossY}`,
+        `400,238`,
+        `500,${lossY}`,
+        `600,240`,
+        `700,${lossY}`,
+        `800,238`
+    ].join(" ");
+
+    document.getElementById("latencyLine").setAttribute("points", latencyPoints);
+    document.getElementById("lossLine").setAttribute("points", lossPoints);
+}
+
+function updateDashboard(data) {
+    const devices = data.devices || [];
+    const actions = data.actions || [];
+
+    updateStats(devices);
+    updateDeviceTable(devices, actions);
+    updatePingMonitor(devices);
+    updateAlerts(devices);
+    updateTopPorts(devices);
+    updateGraph(devices);
+    
+}
+
+async function requestLiveInfo() {
+    const buttons = document.querySelectorAll(".live-btn, .quick-live, .quick-ping, .quick-discover");
+
+    buttons.forEach(btn => {
+        btn.dataset.originalText = btn.dataset.originalText || btn.textContent;
+        btn.textContent = "⟳ Scanning...";
+        btn.disabled = true;
+    });
+
+    try {
+        const response = await fetch("/api/refresh");
+
+        if (!response.ok) {
+            throw new Error("Refresh API returned " + response.status);
+        }
+
+        const data = await response.json();
+
+        updateDashboard(data);
+        updateClock();
+
+        buttons.forEach(btn => {
+            btn.textContent = "✓ Updated";
+            btn.disabled = false;
+        });
+
+        setTimeout(() => {
+            buttons.forEach(btn => {
+                btn.textContent = btn.dataset.originalText;
+            });
+        }, 1500);
+
+    } catch (error) {
+        console.error("Refresh failed:", error);
+
+        buttons.forEach(btn => {
+            btn.textContent = "✗ Failed";
+            btn.disabled = false;
+        });
+
+        setTimeout(() => {
+            buttons.forEach(btn => {
+                btn.textContent = btn.dataset.originalText;
+            });
+        }, 2000);
+    }
+}
+
+function startAutoRefresh() {
+    if (refreshTimer) {
+        clearInterval(refreshTimer);
+    }
+
+    refreshTimer = setInterval(requestLiveInfo, 30000);
 }
 
 updateClock();
 setInterval(updateClock, 1000);
+startAutoRefresh();
 </script>
+<script>
+async function discoverNetwork() {
+    const btn = document.querySelector(".quick-discover");
+    btn.textContent = "⌁ Discovering...";
+    btn.disabled = true;
 
+    try {
+        const response = await fetch("/api/discover");
+        const data = await response.json();
+
+        updateDashboard(data);
+
+        btn.textContent = "✓ Discovery Complete";
+    } catch (error) {
+        console.error(error);
+        btn.textContent = "✗ Discovery Failed";
+    }
+
+    setTimeout(() => {
+        btn.textContent = "⌁ Discover Network";
+        btn.disabled = false;
+    }, 1500);
+}
+
+
+async function pingDonDevices() {
+    const btn = document.querySelector(".quick-ping");
+    btn.textContent = "⌁ Pinging...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch("/api/ping_don_devices");
+        const data = await response.json();
+
+        console.log("Ping results:", data);
+
+        let online = data.results.filter(r => r.online).length;
+        let offline = data.results.length - online;
+
+        alert(`Ping complete: ${online} online, ${offline} offline`);
+
+        btn.textContent = "✓ Ping Complete";
+    } catch (error) {
+        console.error(error);
+        btn.textContent = "✗ Ping Failed";
+    }
+
+    setTimeout(() => {
+        btn.textContent = "⌁ Ping DON Devices";
+        btn.disabled = false;
+    }, 1500);
+}
+</script>
 
 </body>
 </html>

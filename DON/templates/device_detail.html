@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DON Device Detail</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh;
+            background:
+                radial-gradient(circle at top right, rgba(124,58,237,0.18), transparent 35%),
+                radial-gradient(circle at bottom left, rgba(34,197,94,0.10), transparent 30%),
+                #050816;
+            color: #f8fafc; font-family: Arial, sans-serif; padding: 18px;
+        }
+        .app { max-width: 1100px; margin: auto; }
+        .back { display:inline-block; color:#93c5fd; text-decoration:none; font-weight:bold; margin:8px 0 20px; }
+        .hero, .card {
+            background: rgba(15,23,42,0.88); border: 1px solid #1e293b;
+            border-radius: 24px; padding: 22px; margin-bottom: 18px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+        }
+        .hero-top { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+        .device-title { display:flex; gap:16px; align-items:center; }
+        .device-icon {
+            width:64px; height:64px; display:grid; place-items:center; border-radius:18px;
+            background:linear-gradient(135deg,#7c3aed,#1d4ed8); font-size:30px;
+        }
+        h1 { margin:0; color:#a78bfa; font-size:30px; }
+        .sub { margin-top:6px; color:#94a3b8; }
+        .status-pill { padding:10px 14px; border-radius:999px; font-weight:bold; border:1px solid; }
+        .healthy { background:rgba(34,197,94,0.15); color:#22c55e; border-color:rgba(34,197,94,0.4); }
+        .offline { background:rgba(239,68,68,0.15); color:#ef4444; border-color:rgba(239,68,68,0.4); }
+        .warning { background:rgba(245,158,11,0.15); color:#f59e0b; border-color:rgba(245,158,11,0.4); }
+        .quick-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:20px; }
+        .stat, .info-row, .action-card, .event, .terminal, .graph {
+            background:#020617; border:1px solid #334155; border-radius:16px; padding:14px;
+        }
+        .stat-label, .info-key, .action-meta, .event-time { color:#94a3b8; font-size:13px; }
+        .stat-value { color:#e0f2fe; font-size:20px; font-weight:900; margin-top:6px; word-break:break-word; }
+        .grid { display:grid; grid-template-columns:1.15fr .85fr; gap:18px; }
+        .card h2 { margin:0 0 14px; color:#93c5fd; font-size:21px; }
+        .info-table, .action-grid, .timeline { display:grid; gap:10px; }
+        .info-row { display:grid; grid-template-columns:150px 1fr; gap:12px; border-radius:14px; }
+        .info-value { color:#f8fafc; font-weight:bold; word-break:break-word; }
+        .ports { display:flex; gap:10px; flex-wrap:wrap; }
+        .port {
+            padding:9px 12px; border-radius:999px;
+            background:rgba(59,130,246,0.14); color:#60a5fa;
+            border:1px solid rgba(59,130,246,0.35); font-weight:bold;
+        }
+        .action-card { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; }
+        .action-title, .event-title { font-weight:bold; color:#e0f2fe; margin-bottom:4px; }
+        .btn {
+            display:inline-block; padding:11px 14px; border-radius:13px; border:none;
+            background:linear-gradient(135deg,#2563eb,#1e40af); color:white;
+            font-weight:bold; text-decoration:none; cursor:pointer; text-align:center;
+        }
+        .btn.secondary { background:#0f172a; border:1px solid #334155; }
+        .btn.green { background:linear-gradient(135deg,#16a34a,#14532d); }
+        .btn.purple { background:linear-gradient(135deg,#7c3aed,#4c1d95); }
+        .terminal {
+            color:#22c55e; min-height:180px; white-space:pre-wrap;
+            font-family:Consolas, monospace; overflow:auto;
+        }
+        .graph { height:170px; padding:0; overflow:hidden; }
+        .graph svg { width:100%; height:100%; }
+        @media (max-width:850px) {
+            body { padding:12px; }
+            .grid, .quick-stats { grid-template-columns:1fr; }
+            .info-row, .action-card { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+
+    <a class="back" href="/">← Back to DON Dashboard</a>
+
+    <section class="hero">
+        <div class="hero-top">
+            <div class="device-title">
+                <div class="device-icon">
+                    {% if device.type == "Roku" %}📺
+                    {% elif "Desktop" in device.type or "Windows" in device.type %}🖥️
+                    {% elif "Camera" in device.type %}📷
+                    {% elif "Router" in device.type %}📡
+                    {% else %}🌐
+                    {% endif %}
+                </div>
+                <div>
+                    <h1>{{ device.hostname }}</h1>
+                    <div class="sub">{{ device.type }} • {{ device.ip }}</div>
+                </div>
+            </div>
+
+            {% if device.health == "Healthy" %}
+                <div class="status-pill healthy">● Healthy</div>
+            {% elif device.health == "Offline" %}
+                <div class="status-pill offline">● Offline</div>
+            {% else %}
+                <div class="status-pill warning">● {{ device.health }}</div>
+            {% endif %}
+        </div>
+
+        <div class="quick-stats">
+            <div class="stat"><div class="stat-label">IP Address</div><div class="stat-value">{{ device.ip }}</div></div>
+            <div class="stat"><div class="stat-label">MAC Address</div><div class="stat-value">{{ device.mac }}</div></div>
+            <div class="stat"><div class="stat-label">Latency</div><div class="stat-value">{{ device.latency }}</div></div>
+            <div class="stat"><div class="stat-label">Open Ports</div><div class="stat-value">{{ device.ports|length }}</div></div>
+        </div>
+    </section>
+
+    <div class="grid">
+        <div>
+            <section class="card">
+                <h2>Device Identity</h2>
+                <div class="info-table">
+                    <div class="info-row"><div class="info-key">Hostname</div><div class="info-value">{{ device.hostname }}</div></div>
+                    <div class="info-row"><div class="info-key">IP Address</div><div class="info-value">{{ device.ip }}</div></div>
+                    <div class="info-row"><div class="info-key">MAC Address</div><div class="info-value">{{ device.mac }}</div></div>
+                    <div class="info-row"><div class="info-key">Device Type</div><div class="info-value">{{ device.type }}</div></div>
+                    <div class="info-row"><div class="info-key">Health</div><div class="info-value">{{ device.health }}</div></div>
+                    <div class="info-row"><div class="info-key">Latency</div><div class="info-value">{{ device.latency }}</div></div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Open Ports</h2>
+                <div class="ports">
+                    {% if device.ports %}
+                        {% for port in device.ports %}
+                            <div class="port">{{ port }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="event">No open TCP ports detected.</div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Live Ping Graph</h2>
+                <div class="graph">
+                    <svg viewBox="0 0 800 180" preserveAspectRatio="none">
+                        <polyline points="0,120 90,115 180,130 270,100 360,118 450,108 540,122 630,95 720,110 800,104"
+                                  fill="none" stroke="#22c55e" stroke-width="5"/>
+                    </svg>
+                </div>
+            </section>
+        </div>
+
+        <div>
+            <section class="card">
+                <h2>Compatible Actions</h2>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div><div class="action-title">Ping Device</div><div class="action-meta">Test if {{ device.ip }} responds.</div></div>
+                        <button class="btn green" onclick="pingDevice()">Ping</button>
+                    </div>
+
+                    {% if "Roku" in actions %}
+                    <div class="action-card">
+                        <div><div class="action-title">Roku Controller</div><div class="action-meta">Open remote control interface.</div></div>
+                        <a class="btn purple" href="/roku/{{ device.ip }}">Open</a>
+                    </div>
+                    {% endif %}
+
+                    {% if "Desktop" in actions %}
+                    <div class="action-card">
+                        <div><div class="action-title">Desktop Control</div><div class="action-meta">Open Python execution and health console.</div></div>
+                        <a class="btn purple" href="/desktop/">Open</a>
+                    </div>
+                    {% endif %}
+
+                    <div class="action-card">
+                        <div><div class="action-title">Refresh Device</div><div class="action-meta">Reload device details from cached scan.</div></div>
+                        <button class="btn secondary" onclick="location.reload()">Refresh</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Action Output</h2>
+                <div id="actionOutput" class="terminal">Ready.</div>
+            </section>
+
+            <section class="card">
+                <h2>Device Events</h2>
+                <div class="timeline">
+                    <div class="event"><div class="event-title">Device loaded</div><div class="event-time">DON displayed device profile for {{ device.ip }}</div></div>
+                    <div class="event"><div class="event-title">Health status</div><div class="event-time">{{ device.health }}</div></div>
+                    <div class="event"><div class="event-title">Action detection</div><div class="event-time">{{ actions }}</div></div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+async function pingDevice() {
+    const output = document.getElementById("actionOutput");
+    output.textContent = "Pinging {{ device.ip }}...";
+
+    try {
+        const response = await fetch("/api/ping_device/{{ device.ip }}");
+        const data = await response.json();
+
+        output.textContent =
+            "Ping Result\\n" +
+            "--------------------\\n" +
+            "IP: " + data.ip + "\\n" +
+            "Online: " + data.online + "\\n" +
+            "Message: " + data.message;
+
+    } catch (error) {
+        output.textContent = "Ping failed: " + error;
+    }
+}
+</script>
+
+</body>
+</html>
