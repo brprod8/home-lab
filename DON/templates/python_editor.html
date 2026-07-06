@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DON Python Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(59,130,246,0.18), transparent 35%),
+                        radial-gradient(circle at bottom left, rgba(34,197,94,0.10), transparent 30%),
+                        #050816;
+            color: #f8fafc;
+            font-family: Arial, sans-serif;
+            padding: 18px;
+        }
+        .app { max-width: 1180px; margin: auto; }
+        .top-links { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0 20px; }
+        .back { display: inline-block; color: #93c5fd; text-decoration: none; font-weight: bold; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 18px; }
+        h1 { margin: 0; color: #38bdf8; font-size: 30px; }
+        .subtitle { color: #94a3b8; margin-top: 6px; font-size: 14px; }
+        .status-pill {
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(34,197,94,0.16);
+            color: #22c55e;
+            font-weight: bold;
+            border: 1px solid rgba(34,197,94,0.35);
+            white-space: nowrap;
+        }
+        .grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; }
+        .card {
+            background: rgba(15, 23, 42, 0.86);
+            border: 1px solid #1e293b;
+            border-radius: 22px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+        .section-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .section-title h2 { margin: 0; color: #93c5fd; font-size: 21px; }
+        textarea {
+            width: 100%;
+            min-height: 390px;
+            background: #020617;
+            color: #22c55e;
+            font-family: Consolas, monospace;
+            font-size: 15px;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid #334155;
+            outline: none;
+            resize: vertical;
+        }
+        input, select {
+            background: #020617;
+            color: white;
+            border: 1px solid #334155;
+            padding: 12px 14px;
+            border-radius: 13px;
+            font-size: 15px;
+        }
+        input, select { width: 100%; }
+        button {
+            padding: 12px 15px;
+            border-radius: 13px;
+            border: none;
+            font-size: 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+        }
+        button.secondary { background: #0f172a; border: 1px solid #334155; }
+        button.danger { background: linear-gradient(135deg, #dc2626, #7f1d1d); }
+        button.success { background: linear-gradient(135deg, #16a34a, #14532d); }
+        button.warning { background: linear-gradient(135deg, #f59e0b, #7c2d12); }
+        .button-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+        .filename-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin: 12px 0; align-items: center; }
+        .py-ext {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 13px;
+            padding: 12px 14px;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+        .notice {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(56,189,248,0.10);
+            border: 1px solid rgba(56,189,248,0.25);
+            color: #bae6fd;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        pre {
+            background: #020617;
+            color: #22c55e;
+            padding: 15px;
+            border-radius: 16px;
+            overflow: auto;
+            white-space: pre-wrap;
+            min-height: 260px;
+            max-height: 520px;
+            border: 1px solid #334155;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+        }
+        .job-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .queued { background: rgba(168,85,247,.15); color: #a78bfa; }
+        .running { background: rgba(34,197,94,.15); color: #22c55e; }
+        .completed { background: rgba(59,130,246,.15); color: #60a5fa; }
+        .failed { background: rgba(239,68,68,.15); color: #ef4444; }
+        .timeout { background: rgba(245,158,11,.15); color: #f59e0b; }
+        .job-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .job-detail { background: #020617; border: 1px solid #334155; border-radius: 14px; padding: 12px; }
+        .job-detail small { display: block; color: #94a3b8; margin-bottom: 5px; }
+        .job-detail strong { color: #f8fafc; word-break: break-word; }
+        .progress-wrap {
+            width: 100%;
+            height: 13px;
+            border-radius: 999px;
+            background: #020617;
+            border: 1px solid #334155;
+            overflow: hidden;
+            margin: 12px 0 16px;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #22c55e, #38bdf8, #8b5cf6);
+            transition: width .4s ease;
+        }
+        .scripts-list, .files-list { display: grid; gap: 12px; }
+        .script-item, .file-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 14px;
+        }
+        .script-name, .file-name { font-weight: bold; color: #e0f2fe; word-break: break-word; }
+        .script-meta, .file-meta { color: #94a3b8; font-size: 13px; margin-top: 4px; line-height: 1.4; }
+        .file-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .viewer {
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 12px;
+            min-height: 260px;
+            overflow: auto;
+        }
+        .viewer img { max-width: 100%; border-radius: 12px; display: block; margin: auto; }
+        .viewer iframe { width: 100%; min-height: 520px; border: 1px solid #334155; border-radius: 12px; background: white; }
+        .viewer table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .viewer th, .viewer td { border-bottom: 1px solid #334155; padding: 8px; text-align: left; }
+        .viewer th { color: #93c5fd; }
+        @media (max-width: 900px) {
+            body { padding: 12px; }
+            .topbar { flex-direction: column; align-items: flex-start; }
+            .grid, .job-grid { grid-template-columns: 1fr; }
+            .script-item, .file-item { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="top-links">
+        <a class="back" href="/">← Back to DON Dashboard</a>
+        <a class="back" href="/desktop">← Desktop Controller</a>
+    </div>
+
+    <div class="topbar">
+        <div>
+            <h1>Python Editor</h1>
+            <div class="subtitle">Save to phone_code.py, create saved scripts, run jobs, and view generated files.</div>
+        </div>
+        <div class="status-pill">Editor: READY 🟢</div>
+    </div>
+
+    <div class="grid">
+        <div>
+            <div class="card">
+                <div class="section-title">
+                    <h2>Code Workspace</h2>
+                    <div id="currentJobStatus" class="job-status queued">No job running</div>
+                </div>
+
+                <textarea id="codeBox">print("Hello from DON Python Editor")
+print("This will save to scripts/phone_code.py when you press Run Code.")</textarea>
+
+                <div class="filename-row">
+                    <input id="scriptNameInput" type="text" placeholder="Save as new script, example: system_health">
+                    <div class="py-ext">.py</div>
+                </div>
+
+                <div class="button-row">
+                    <button onclick="runCode()">▶ Run Code</button>
+                    <button class="success" onclick="saveToPhoneCode()">💾 Save to phone_code.py</button>
+                    <button class="secondary" onclick="saveScript()">💾 Save As New Script</button>
+                    <button class="warning" onclick="clearEditor()">Clear Editor</button>
+                </div>
+
+                <div class="notice">
+                    ▶ <strong>Run Code</strong> saves your editor code to <strong>scripts/phone_code.py</strong> and starts a job.<br>
+                    💾 <strong>Save to phone_code.py</strong> only saves the editor code without running it.<br>
+                    💾 <strong>Save As New Script</strong> creates a permanent script in <strong>scripts/</strong>.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">
+                    <h2>Current Job</h2>
+                    <button class="secondary" onclick="loadJobHistory()">Refresh History</button>
+                </div>
+
+                <div class="job-grid">
+                    <div class="job-detail"><small>Script</small><strong id="jobScript">None</strong></div>
+                    <div class="job-detail"><small>Runtime</small><strong id="jobRuntime">0.00 seconds</strong></div>
+                    <div class="job-detail"><small>Job ID</small><strong id="jobId">None</strong></div>
+                    <div class="job-detail"><small>Status</small><strong id="jobStatusText">Idle</strong></div>
+                </div>
+
+                <div class="progress-wrap"><div id="progressBar" class="progress-bar"></div></div>
+
+                <h3 style="margin-bottom:10px;color:#93c5fd;">Output</h3>
+                <pre id="outputBox">Output will appear here.</pre>
+
+                <div class="button-row">
+                    <button class="secondary" onclick="clearOutput()">Clear Output</button>
+                    <button class="danger" onclick="stopPolling()">Stop Polling</button>
+                    <button class="secondary" onclick="loadFiles()">Refresh Files</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">
+                    <h2>File Viewer</h2>
+                    <button class="secondary" onclick="clearViewer()">Clear Viewer</button>
+                </div>
+                <div id="viewerBox" class="viewer">Select a file from Generated Files to preview it here.</div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <div class="section-title">
+                    <h2>Saved Scripts</h2>
+                    <button class="secondary" onclick="refreshScripts()">Refresh</button>
+                </div>
+
+                <select id="scriptSelect">
+                    {% for script in scripts %}
+                    <option value="{{ script }}">{{ script }}</option>
+                    {% endfor %}
+                </select>
+
+                <div class="button-row">
+                    <button onclick="runSelectedScript()">▶ Run Selected</button>
+                    <button class="danger" onclick="deleteSelectedScript()">Delete Selected</button>
+                </div>
+
+                <br>
+
+                <div id="scriptsList" class="scripts-list">
+                    {% for script in scripts %}
+                    <div class="script-item">
+                        <div>
+                            <div class="script-name">📄 {{ script }}</div>
+                            <div class="script-meta">Saved Python script</div>
+                        </div>
+                        <div class="file-actions">
+                            <button onclick="runSavedScript('{{ script }}')">▶</button>
+                            <button class="danger" onclick="deleteScript('{{ script }}')">Delete</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">
+                    <h2>Generated Files</h2>
+                    <button class="secondary" onclick="loadFiles()">Refresh</button>
+                </div>
+                <div id="filesList" class="files-list">Loading files...</div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">
+                    <h2>Recent Jobs</h2>
+                    <button class="secondary" onclick="loadJobHistory()">Refresh</button>
+                </div>
+                <div id="jobHistory" class="scripts-list">Loading job history...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let activePoll = null;
+let runtimeTimer = null;
+let jobStartLocalTime = null;
+
+function setStatus(status) {
+    const box = document.getElementById("currentJobStatus");
+    const text = document.getElementById("jobStatusText");
+    box.className = "job-status " + status;
+    box.textContent = status.toUpperCase();
+    text.textContent = status;
+}
+
+function updateProgress(status) {
+    const bar = document.getElementById("progressBar");
+    if (status === "queued") bar.style.width = "20%";
+    else if (status === "running") bar.style.width = "70%";
+    else if (status === "completed") bar.style.width = "100%";
+    else if (status === "failed" || status === "timeout") bar.style.width = "100%";
+    else bar.style.width = "0%";
+}
+
+function startRuntimeTimer() {
+    if (runtimeTimer) clearInterval(runtimeTimer);
+    jobStartLocalTime = Date.now();
+    runtimeTimer = setInterval(() => {
+        const seconds = ((Date.now() - jobStartLocalTime) / 1000).toFixed(2);
+        document.getElementById("jobRuntime").textContent = seconds + " seconds";
+    }, 500);
+}
+
+function stopRuntimeTimer(finalRuntime) {
+    if (runtimeTimer) {
+        clearInterval(runtimeTimer);
+        runtimeTimer = null;
+    }
+    if (finalRuntime !== null && finalRuntime !== undefined) {
+        document.getElementById("jobRuntime").textContent = finalRuntime + " seconds";
+    }
+}
+
+function renderJob(job) {
+    setStatus(job.status);
+    updateProgress(job.status);
+    document.getElementById("jobScript").textContent = job.script_name || "Unknown";
+    document.getElementById("jobId").textContent = job.job_id || "None";
+
+    if (job.runtime_seconds !== null && job.runtime_seconds !== undefined) {
+        document.getElementById("jobRuntime").textContent = job.runtime_seconds + " seconds";
+    }
+
+    document.getElementById("outputBox").textContent =
+        "Job Source: " + (job.type === "live_code" ? "Python Editor" : "Saved Script") + "\n" +
+        "Script: " + job.script_name + "\n" +
+        "Status: " + job.status + "\n" +
+        "Created: " + job.created_at + "\n" +
+        "Started: " + job.started_at + "\n" +
+        "Completed: " + job.completed_at + "\n" +
+        "Runtime: " + job.runtime_seconds + " seconds\n\n" +
+        "Output:\n" +
+        job.output;
+}
+
+async function pollJob(jobId) {
+    if (activePoll) clearInterval(activePoll);
+    startRuntimeTimer();
+
+    activePoll = setInterval(async () => {
+        try {
+            const response = await fetch(`/desktop/job/${jobId}`);
+            const job = await response.json();
+
+            if (job.status === "not_found") {
+                clearInterval(activePoll);
+                activePoll = null;
+                stopRuntimeTimer(null);
+                setStatus("failed");
+                updateProgress("failed");
+                document.getElementById("outputBox").textContent = "Job not found or server restarted.";
+                return;
+            }
+
+            renderJob(job);
+
+            if (job.status === "completed" || job.status === "failed" || job.status === "timeout") {
+                clearInterval(activePoll);
+                activePoll = null;
+                stopRuntimeTimer(job.runtime_seconds);
+                loadJobHistory();
+                refreshScripts();
+                loadFiles();
+            }
+        } catch (error) {
+            clearInterval(activePoll);
+            activePoll = null;
+            stopRuntimeTimer(null);
+            setStatus("failed");
+            updateProgress("failed");
+            document.getElementById("outputBox").textContent = "Polling error: " + error;
+        }
+    }, 1000);
+}
+
+async function runCode() {
+    const code = document.getElementById("codeBox").value;
+    setStatus("queued");
+    updateProgress("queued");
+    document.getElementById("jobScript").textContent = "phone_code.py";
+    document.getElementById("outputBox").textContent = "Saving editor code to scripts/phone_code.py...\nStarting job...";
+
+    const response = await fetch("/desktop/run_code", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "code=" + encodeURIComponent(code)
+    });
+
+    const data = await response.json();
+
+    if (data.job_id) {
+        document.getElementById("jobId").textContent = data.job_id;
+        document.getElementById("outputBox").textContent =
+            "✓ Saved to scripts/phone_code.py\n" +
+            "✓ Job queued: " + data.job_id + "\n" +
+            "Launching Python...";
+        pollJob(data.job_id);
+    } else {
+        setStatus("failed");
+        updateProgress("failed");
+        document.getElementById("outputBox").textContent = data.error || "Unknown error.";
+    }
+}
+
+async function saveToPhoneCode() {
+    const code = document.getElementById("codeBox").value;
+
+    const response = await fetch("/desktop/save_script", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "script_name=" + encodeURIComponent("phone_code.py") + "&code=" + encodeURIComponent(code)
+    });
+
+    const data = await response.json();
+
+    document.getElementById("outputBox").textContent =
+        response.ok ? "✓ Saved to scripts/phone_code.py" : "Save failed: " + (data.error || "Unknown error");
+
+    refreshScripts();
+}
+
+async function saveScript() {
+    const code = document.getElementById("codeBox").value;
+    let scriptName = document.getElementById("scriptNameInput").value.trim();
+
+    if (!scriptName) {
+        document.getElementById("outputBox").textContent = "Enter a script name first.";
+        return;
+    }
+
+    if (!scriptName.endsWith(".py")) scriptName += ".py";
+
+    const response = await fetch("/desktop/save_script", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "script_name=" + encodeURIComponent(scriptName) + "&code=" + encodeURIComponent(code)
+    });
+
+    const data = await response.json();
+
+    document.getElementById("outputBox").textContent =
+        response.ok ? "✓ Saved script: scripts/" + data.script_name : "Save failed: " + (data.error || "Unknown error");
+
+    refreshScripts();
+}
+
+async function runSelectedScript() {
+    const script = document.getElementById("scriptSelect").value;
+    runSavedScript(script);
+}
+
+async function runSavedScript(script) {
+    setStatus("queued");
+    updateProgress("queued");
+    document.getElementById("jobScript").textContent = script;
+    document.getElementById("outputBox").textContent = "Preparing saved script...\nFile: scripts/" + script;
+
+    const response = await fetch("/desktop/run", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "script=" + encodeURIComponent(script)
+    });
+
+    const data = await response.json();
+
+    if (data.job_id) {
+        document.getElementById("jobId").textContent = data.job_id;
+        document.getElementById("outputBox").textContent =
+            "✓ Script found: scripts/" + script + "\n" +
+            "✓ Job queued: " + data.job_id;
+        pollJob(data.job_id);
+    } else {
+        setStatus("failed");
+        updateProgress("failed");
+        document.getElementById("outputBox").textContent = data.error || "Unknown error.";
+    }
+}
+
+async function refreshScripts() {
+    const response = await fetch("/desktop/scripts");
+    const data = await response.json();
+    const select = document.getElementById("scriptSelect");
+    const list = document.getElementById("scriptsList");
+
+    select.innerHTML = "";
+    list.innerHTML = "";
+
+    if (!data.scripts || data.scripts.length === 0) {
+        list.textContent = "No saved scripts yet.";
+        return;
+    }
+
+    data.scripts.forEach(script => {
+        const option = document.createElement("option");
+        option.value = script;
+        option.textContent = script;
+        select.appendChild(option);
+
+        const item = document.createElement("div");
+        item.className = "script-item";
+        item.innerHTML = `
+            <div>
+                <div class="script-name">📄 ${script}</div>
+                <div class="script-meta">Saved Python script</div>
+            </div>
+            <div class="file-actions">
+                <button onclick="runSavedScript('${script}')">▶</button>
+                <button class="danger" onclick="deleteScript('${script}')">Delete</button>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+async function deleteSelectedScript() {
+    const script = document.getElementById("scriptSelect").value;
+    deleteScript(script);
+}
+
+async function deleteScript(scriptName) {
+    if (!scriptName) return;
+    if (!confirm("Delete " + scriptName + "?")) return;
+
+    const response = await fetch("/desktop/delete_script", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "script_name=" + encodeURIComponent(scriptName)
+    });
+
+    const data = await response.json();
+
+    document.getElementById("outputBox").textContent =
+        response.ok ? "✓ Deleted script: " + data.script_name : "Delete failed: " + (data.error || "Unknown error");
+
+    refreshScripts();
+}
+
+async function loadJobHistory() {
+    const response = await fetch("/desktop/jobs");
+    const data = await response.json();
+    const box = document.getElementById("jobHistory");
+    box.innerHTML = "";
+
+    if (!data.history || data.history.length === 0) {
+        box.textContent = "No job history yet.";
+        return;
+    }
+
+    data.history.forEach(job => {
+        const item = document.createElement("div");
+        item.className = "script-item";
+
+        let icon = "🟢";
+        if (job.status === "failed") icon = "🔴";
+        if (job.status === "timeout") icon = "🟡";
+
+        item.innerHTML = `
+            <div>
+                <div class="script-name">${icon} ${job.script_name}</div>
+                <div class="script-meta">
+                    Status: ${job.status}<br>
+                    Runtime: ${job.runtime_seconds} seconds<br>
+                    Completed: ${job.completed_at}
+                </div>
+            </div>
+            <button onclick="viewJob('${job.job_id}')">View</button>
+        `;
+
+        box.appendChild(item);
+    });
+}
+
+async function viewJob(jobId) {
+    const response = await fetch(`/desktop/job/${jobId}`);
+    const job = await response.json();
+
+    if (job.status === "not_found") {
+        document.getElementById("outputBox").textContent = "Job not found or server restarted.";
+        return;
+    }
+
+    renderJob(job);
+}
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + " GB";
+}
+
+async function loadFiles() {
+    const response = await fetch("/desktop/files");
+    const data = await response.json();
+    const box = document.getElementById("filesList");
+    box.innerHTML = "";
+
+    if (!data.files || data.files.length === 0) {
+        box.textContent = "No generated files found in output/.";
+        return;
+    }
+
+    data.files.forEach(file => {
+        const item = document.createElement("div");
+        item.className = "file-item";
+
+        item.innerHTML = `
+            <div>
+                <div class="file-name">📎 ${file.name}</div>
+                <div class="file-meta">${file.path}<br>${formatBytes(file.size)}</div>
+            </div>
+            <div class="file-actions">
+                <button onclick="viewFile('${file.path}', '${file.url}')">View</button>
+                <a href="${file.url}" target="_blank"><button class="secondary">Open</button></a>
+                <button class="danger" onclick="deleteFile('${file.path}')">Delete</button>
+            </div>
+        `;
+
+        box.appendChild(item);
+    });
+}
+
+async function viewFile(path, url) {
+    const viewer = document.getElementById("viewerBox");
+    const lower = path.toLowerCase();
+
+    if (lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".gif")) {
+        viewer.innerHTML = `<img src="${url}" alt="${path}">`;
+        return;
+    }
+
+    if (lower.endsWith(".pdf")) {
+        viewer.innerHTML = `<iframe src="${url}"></iframe>`;
+        return;
+    }
+
+    if (lower.endsWith(".csv") || lower.endsWith(".txt") || lower.endsWith(".log") || lower.endsWith(".json") || lower.endsWith(".md")) {
+        const response = await fetch(url);
+        const text = await response.text();
+
+        if (lower.endsWith(".csv")) {
+            viewer.innerHTML = csvToTable(text);
+        } else {
+            viewer.innerHTML = `<pre>${escapeHtml(text)}</pre>`;
+        }
+
+        return;
+    }
+
+    if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+        viewer.innerHTML =
+            "Excel workbook preview is not supported directly in browser yet.<br><br>" +
+            `<a class="back" href="${url}" target="_blank">Open / Download Workbook</a>`;
+        return;
+    }
+
+    viewer.innerHTML = `<a class="back" href="${url}" target="_blank">Open ${path}</a>`;
+}
+
+function csvToTable(csv) {
+    const rows = csv.trim().split("\n").map(row => row.split(","));
+    let html = "<table>";
+
+    rows.forEach((row, index) => {
+        html += "<tr>";
+        row.forEach(cell => {
+            html += index === 0 ? `<th>${escapeHtml(cell)}</th>` : `<td>${escapeHtml(cell)}</td>`;
+        });
+        html += "</tr>";
+    });
+
+    html += "</table>";
+    return html;
+}
+
+function escapeHtml(text) {
+    return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+}
+
+async function deleteFile(path) {
+    if (!confirm("Delete " + path + "?")) return;
+
+    const response = await fetch("/desktop/delete_file", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "filename=" + encodeURIComponent(path)
+    });
+
+    const data = await response.json();
+
+    document.getElementById("outputBox").textContent =
+        response.ok ? "✓ Deleted file: " + data.filename : "Delete failed: " + (data.error || "Unknown error");
+
+    loadFiles();
+}
+
+function clearOutput() {
+    document.getElementById("outputBox").textContent = "Output cleared.";
+    updateProgress("idle");
+    setStatus("queued");
+}
+
+function clearViewer() {
+    document.getElementById("viewerBox").innerHTML = "Select a file from Generated Files to preview it here.";
+}
+
+function clearEditor() {
+    if (!confirm("Clear editor?")) return;
+    document.getElementById("codeBox").value = "";
+}
+
+function stopPolling() {
+    if (activePoll) {
+        clearInterval(activePoll);
+        activePoll = null;
+        stopRuntimeTimer(null);
+        setStatus("timeout");
+        document.getElementById("outputBox").textContent += "\n\nPolling stopped.";
+    }
+}
+
+loadJobHistory();
+refreshScripts();
+loadFiles();
+</script>
+</body>
+</html>

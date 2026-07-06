@@ -1,9 +1,9 @@
-# Change this to scan your network.
+from don.network_utils import get_active_host_ip, derive_subnet
 
+HOST_IP = get_active_host_ip()
+SUBNET = derive_subnet(HOST_IP)
 
-SUBNET = "0.0.0.0" #edit me
-
-
+PORT = 5000
 COMMON_PORTS = [
     21, 22, 23, 53, 80, 443, 445,
     554, 8060, 8080, 8443, 9000, 3389
