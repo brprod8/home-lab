@@ -1,7 +1,8 @@
 # Change this to scan your network.
 
 
-SUBNET = "192.168.86"
+SUBNET = "0.0.0.0" #edit me
+
 
 COMMON_PORTS = [
     21, 22, 23, 53, 80, 443, 445,
