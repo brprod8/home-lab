@@ -17,7 +17,7 @@ and executing automation directly from your iPhone.
 
 DON (Device Operations Network) is a Python + Flask based Network Operations Platform built for a personal homelab.
 
-Unlike traditional dashboards that only display devices, DON actively discovers devices, determines what they support, and exposes live actions that can interact with them.
+ DON actively discovers devices, determines what they support, and exposes live actions that can interact with them.
 
 Everything runs completely inside the local network.
 
