@@ -105,15 +105,36 @@ print("DON remote Python execution works")</textarea>
 </div>
 
 <a href="/">Back to DON</a>
-
 <script>
+async function pollJob(jobId) {
+    const outputBox = document.getElementById("outputBox");
+
+    const interval = setInterval(async function () {
+        const response = await fetch(`/desktop/job/${jobId}`);
+        const data = await response.json();
+
+        outputBox.textContent =
+            "Status: " + data.status + "\n\n" + data.output;
+
+        if (
+            data.status === "complete" ||
+            data.status === "error" ||
+            data.status === "timeout"
+        ) {
+            clearInterval(interval);
+        }
+
+    }, 1000);
+}
+
+
 document.getElementById("codeForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
     const code = document.getElementById("codeBox").value;
     const outputBox = document.getElementById("outputBox");
 
-    outputBox.textContent = "Running code...";
+    outputBox.textContent = "Starting background job...";
 
     const response = await fetch("/desktop/run_code", {
         method: "POST",
@@ -123,8 +144,14 @@ document.getElementById("codeForm").addEventListener("submit", async function(e)
         body: "code=" + encodeURIComponent(code)
     });
 
-    const text = await response.text();
-    outputBox.textContent = text;
+    const data = await response.json();
+
+    if (data.job_id) {
+        outputBox.textContent = "Job started: " + data.job_id;
+        pollJob(data.job_id);
+    } else {
+        outputBox.textContent = data.error || "Unknown error.";
+    }
 });
 
 
@@ -134,7 +161,7 @@ document.getElementById("scriptForm").addEventListener("submit", async function(
     const script = document.getElementById("scriptSelect").value;
     const outputBox = document.getElementById("outputBox");
 
-    outputBox.textContent = "Running script...";
+    outputBox.textContent = "Starting saved script...";
 
     const response = await fetch("/desktop/run", {
         method: "POST",
@@ -144,8 +171,14 @@ document.getElementById("scriptForm").addEventListener("submit", async function(
         body: "script=" + encodeURIComponent(script)
     });
 
-    const text = await response.text();
-    outputBox.textContent = text;
+    const data = await response.json();
+
+    if (data.job_id) {
+        outputBox.textContent = "Job started: " + data.job_id;
+        pollJob(data.job_id);
+    } else {
+        outputBox.textContent = data.error || "Unknown error.";
+    }
 });
 
 
