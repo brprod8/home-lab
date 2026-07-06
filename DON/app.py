@@ -165,6 +165,17 @@ def api_actions():
     return jsonify(latest_actions)
 
 
+#------------------------------------------------------#
+@app.route("/logs")
+def logs_page():
+    try:
+        with open("logs/don.log", "r") as file:
+            logs = file.read()
+    except FileNotFoundError:
+        logs = "No logs yet."
+
+    return f"<pre style='background:#111;color:#0f0;padding:20px;'>{logs}</pre>"
+
 # --------------------------------------------------
 # Run
 # --------------------------------------------------

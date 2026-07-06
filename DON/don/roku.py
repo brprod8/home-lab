@@ -5,6 +5,7 @@ from don.actions import (
     roku_volume_mute, roku_youtube, roku_play_pause,
     roku_search, roku_info, roku_type_text
 )
+from don.logger import log_info, log_error
 
 roku_bp = Blueprint("roku", __name__)
 
