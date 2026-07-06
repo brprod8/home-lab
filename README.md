@@ -73,7 +73,7 @@ The iPhone connects through Safari and becomes a wireless control panel.
 - Network Overview
 
 <p align="center">
-<img src="pics/mobile.png" width="900">
+<img src="pics/desktop.png" width="900">
 </p>
 
 ---
